@@ -1,0 +1,30 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+db.sqlite3
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+/media
+/staticfiles
+
+# Node.js (Next.js frontend)
+node_modules/
+.next/
+.env.local
+.env.development
+.env.production
+out/
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
