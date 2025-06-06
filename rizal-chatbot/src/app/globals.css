@@ -1,15 +1,48 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Maragsa';
+  src: url('/fonts/Maragsa.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Pica';
+  src: url('/fonts/Pica.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
-  --background: #ffffff;
+  --background: #FDF3DF;
   --foreground: #171717;
+
+  --font-maragsa: 'Maragsa', serif;
+  --font-pica: 'Pica', serif;
+
+  --color-beige: #FDF3DF;
+  --color-yellow: #FAD02B;
+  --color-peach: #F2D3B6;
+  --color-brown: #562D18;
+  --color-blue: #264888;
+  --color-red: #BF391D;
+  --color-sand: #F0E8D9;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-maragsa: var(--font-maragsa);
+  --font-pica: var(--font-pica);
+
+  --color-beige: var(--color-beige);
+  --color-yellow: var(--color-yellow);
+  --color-peach: var(--color-peach);
+  --color-brown: var(--color-brown);
+  --color-blue: var(--color-blue);
+  --color-red: var(--color-red);
+  --color-sand: var(--color-sand);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +55,4 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
