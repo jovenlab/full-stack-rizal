@@ -4,6 +4,19 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
+function typeBotReply(fullText: string, onUpdate: (typedText: string) => void, onComplete: () => void) {
+  let index = 0;
+  const interval = setInterval(() => {
+    index++;
+    onUpdate(fullText.slice(0, index));
+    if (index === fullText.length) {
+      clearInterval(interval);
+      onComplete();
+    }
+  }, 20); 
+  return () => clearInterval(interval);
+}
+
 interface ChatMessage {
   sender: 'user' | 'rizal';
   message: string;
@@ -14,6 +27,8 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const router = useRouter();
+
+  const [displayedMessages, setDisplayedMessages] = useState<ChatMessage[]>([]);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
 
@@ -59,16 +74,34 @@ export default function ChatPage() {
         }
       );
 
-      const rizalMessage: ChatMessage = {
+      // Start typing animation for bot reply
+      const fullReply = res.data.response;
+
+      const emptyBotMessage: ChatMessage = {
         sender: 'rizal',
-        message: res.data.response,
+        message: '',
         timestamp: new Date().toISOString(),
       };
-      setMessages((prev) => [...prev, rizalMessage]);
+      setMessages((prev) => [...prev, emptyBotMessage]);
+
+      typeBotReply(
+        fullReply,
+        (typed) => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { ...updated[updated.length - 1], message: typed };
+            return updated;
+          });
+        },
+        () => {
+          // Typing finished
+        }
+      );
     } catch (err) {
       console.error('Failed to send message:', err);
     }
   };
+
 
   const logout = () => {
     localStorage.removeItem('access_token');
