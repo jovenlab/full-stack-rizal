@@ -5,6 +5,13 @@ import { useRouter } from 'next/navigation';
 import RegisterModal from '@/src/components/RegisterModal';
 import LoginModal from '@/src/components/LoginModal';
 
+// Initial commit are:
+// 1. Authentication(Django REST Framework + JWT)
+// 2. Protect API endpoints on Django side
+// 3. Build the Chatbot UI
+// 4. Backend Setup(Django endpoint /api/chat/)
+// 5. Real LLM Integration
+
 export default function Home() {
   const [showRegister, setShowRegister] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
