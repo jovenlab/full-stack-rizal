@@ -15,7 +15,6 @@ from .models import ChatMessage
 class ChatAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-
     def post(self, request):
         message = request.data.get("message", "").strip()
         if not message:
@@ -31,6 +30,8 @@ class ChatAPIView(APIView):
             headers = {
                 "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
                 "Content-Type": "application/json",
+                "HTTP-Referer": "http://localhost:3000/",  # or your actual frontend URL
+                "X-Title": "Jose Rizal Chatbot"
             }
             body = {
                 "model": "mistralai/mistral-7b-instruct",  # or other free LLM

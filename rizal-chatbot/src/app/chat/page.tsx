@@ -1,21 +1,8 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-
-function typeBotReply(fullText: string, onUpdate: (typedText: string) => void, onComplete: () => void) {
-    let index = 0;
-    const interval = setInterval(() => {
-      index++;
-      onUpdate(fullText.slice(0, index));
-      if (index === fullText.length) {
-        clearInterval(interval);
-        onComplete();
-      }
-    }, 20); // 20ms delay per char, adjust speed here
-    return () => clearInterval(interval);
-}
 
 interface ChatMessage {
   sender: 'user' | 'rizal';
@@ -27,9 +14,6 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const router = useRouter();
-
-
-  const [displayedMessages, setDisplayedMessages] = useState<ChatMessage[]>([]);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
 
@@ -56,7 +40,7 @@ export default function ChatPage() {
     };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
-  
+
     try {
       const res = await axios.post(
         'http://localhost:8000/api/chat/',
@@ -67,35 +51,17 @@ export default function ChatPage() {
           },
         }
       );
-  
-      // Start typing animation for bot reply
-      const fullReply = res.data.response;
-  
-      const emptyBotMessage: ChatMessage = {
+
+      const rizalMessage: ChatMessage = {
         sender: 'rizal',
-        message: '',
+        message: res.data.response,
         timestamp: new Date().toISOString(),
       };
-      setMessages((prev) => [...prev, emptyBotMessage]);
-  
-      typeBotReply(
-        fullReply,
-        (typed) => {
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { ...updated[updated.length - 1], message: typed };
-            return updated;
-          });
-        },
-        () => {
-          // Typing finished
-        }
-      );
+      setMessages((prev) => [...prev, rizalMessage]);
     } catch (err) {
       console.error('Failed to send message:', err);
     }
   };
-  
 
   const logout = () => {
     localStorage.removeItem('access_token');
@@ -106,11 +72,6 @@ export default function ChatPage() {
     if (!token) router.push('/');
     else fetchHistory();
   }, []);
-
-  const bottomRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   return (
     <div className="flex h-screen">
@@ -133,10 +94,7 @@ export default function ChatPage() {
 
       {/* Main Chat */}
       <div className="flex-1 flex flex-col justify-between p-4">
-        <div 
-            className="overflow-y-auto space-y-4 mb-4 max-h-[80vh] pr-2"
-            style={{ overflowY: 'auto' }}
-        >
+        <div className="overflow-y-auto space-y-4 mb-4 max-h-[80vh] pr-2">
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -149,10 +107,7 @@ export default function ChatPage() {
               <p>{msg.message}</p>
             </div>
           ))}
-          
-          <div ref={bottomRef} />
         </div>
-
 
         {/* Input */}
         <div className="flex gap-2">
