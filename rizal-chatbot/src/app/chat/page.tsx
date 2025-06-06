@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
@@ -16,6 +16,13 @@ export default function ChatPage() {
   const router = useRouter();
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+  // Scroll to bottom on messages update
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
 
   const fetchHistory = async () => {
     try {
@@ -94,7 +101,10 @@ export default function ChatPage() {
 
       {/* Main Chat */}
       <div className="flex-1 flex flex-col justify-between p-4">
-        <div className="overflow-y-auto space-y-4 mb-4 max-h-[80vh] pr-2">
+        <div 
+            className="overflow-y-auto space-y-4 mb-4 max-h-[80vh] pr-2"
+            style={{ overflowY: 'auto' }}
+        >
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -107,6 +117,9 @@ export default function ChatPage() {
               <p>{msg.message}</p>
             </div>
           ))}
+
+          {/* This empty div is used to scroll into view */}
+          <div ref={bottomRef} />
         </div>
 
         {/* Input */}
