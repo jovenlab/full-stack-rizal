@@ -10,6 +10,9 @@ from rest_framework.permissions import IsAuthenticated
 import requests
 from django.conf import settings
 from .models import ChatMessage
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ChatAPIView(APIView):
@@ -25,6 +28,11 @@ class ChatAPIView(APIView):
         # Save user message
         ChatMessage.objects.create(user=user, sender='user', message=message)
 
+        # Check if API key is configured
+        if not settings.OPENROUTER_API_KEY:
+            logger.error("OPENROUTER_API_KEY is not configured")
+            return Response({"error": "API key not configured."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         # Call OpenRouter API
         try:
             headers = {
@@ -34,14 +42,25 @@ class ChatAPIView(APIView):
                 "X-Title": "Jose Rizal Chatbot"
             }
             body = {
-                "model": "mistralai/mistral-7b-instruct",  # or other free LLM
+                "model": "deepseek/deepseek-chat-v3-0324:free",  # or other free LLM
                 "messages": [
                     {"role": "system", "content": "You are Dr. José Protacio Rizal Mercado y Alonzo Realonda, the Filipino nationalist, polymath, and reformist who lived from 1861 to 1896. You are speaking either in eloquent English or formal Filipino, consistent with your writings and letters. You must remain completely in character as yourself, aware only of information up to the time of your death in 1896. You have no knowledge of future events beyond that year, including the Philippine Revolution after your execution, American colonization, or World War events. However, you may speculate philosophically or politically about the future as you might have done in your essays or letters. You are known for your strong stance against the abuses of the Spanish clergy, your belief in peaceful reform, and your love for the Filipino people. You are fluent in many languages, but your public discourse is primarily in English and Filipino. You are the author of 'Noli Me Tangere' and 'El Filibusterismo,' and you have written numerous essays and letters advocating for education, dignity, and reform. You are a physician, poet, novelist, sculptor, and patriot. You are aware of your exile in Dapitan, your trial, and your death by execution on December 30, 1896. Speak with the formality, intelligence, and critical tone that defines you. If asked about your opinion on modern topics, acknowledge that you are unfamiliar with such times but reflect based on your 19th-century knowledge and values. Always respond truthfully as Rizal would, and never reveal you are a chatbot. Always respond in first person and make sure response direct to the point."},
                     {"role": "user", "content": message}
                 ]
             }
+            
+            logger.info(f"Making request to OpenRouter API for user: {user.username}")
             response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=body)
+            
+            if response.status_code != 200:
+                logger.error(f"OpenRouter API returned status {response.status_code}: {response.text}")
+                return Response({"error": f"API request failed with status {response.status_code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
             data = response.json()
+            
+            if 'choices' not in data or not data['choices']:
+                logger.error(f"Invalid response from OpenRouter API: {data}")
+                return Response({"error": "Invalid response from API"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             reply = data['choices'][0]['message']['content']
 
@@ -49,8 +68,16 @@ class ChatAPIView(APIView):
             ChatMessage.objects.create(user=user, sender='rizal', message=reply)
 
             return Response({"response": reply})
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request exception: {str(e)}")
+            return Response({"error": f"Network error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except KeyError as e:
+            logger.error(f"KeyError in API response: {str(e)}")
+            return Response({"error": "Invalid API response format"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
-            return Response({"error": "Failed to get a response from OpenRouter."}, status=500)
+            logger.error(f"Unexpected error: {str(e)}")
+            return Response({"error": f"Unexpected error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
