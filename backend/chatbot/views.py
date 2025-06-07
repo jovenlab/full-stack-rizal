@@ -6,6 +6,7 @@ from rest_framework import status, generics, permissions
 from .serializers import RegisterSerializer, ChatMessageSerializer, ChatSessionSerializer, SessionMessagesSerializer
 
 from rest_framework.permissions import IsAuthenticated
+import os
 
 import requests
 import logging
@@ -60,6 +61,7 @@ class ChatSessionDetailView(APIView):
 
 class ChatAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
 
     def post(self, request):
         message = request.data.get("message", "").strip()
@@ -94,16 +96,16 @@ class ChatAPIView(APIView):
             session.save()
 
         # Check if API key is configured
-        if not settings.OPENROUTER_API_KEY:
+        if not self.openrouter_api_key:
             logger.error("OPENROUTER_API_KEY is not configured")
             return Response({"error": "API key not configured."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Call OpenRouter API
         try:
             headers = {
-                "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+                "Authorization": f"Bearer {self.openrouter_api_key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "http://localhost:3000/",  # or your actual frontend URL
+                "HTTP-Referer": "https://full-stack-rizal-deployment.onrender.com/",  # or your actual frontend URL
                 "X-Title": "Jose Rizal Chatbot"
             }
             body = {
