@@ -35,7 +35,7 @@ export default function ActionButton({
         hover:cursor-pointer
         ${variant === ButtonVariant.Outlined ? `text-${color}` : `text-white`}
         ${variant === ButtonVariant.Filled ? `bg-${color}` : `bg-transparent`}
-        ${variant === ButtonVariant.Filled ? `hover:opacity-80` : `hover:bg-${color} hover:text-white`}
+        ${variant === ButtonVariant.Filled ? `hover:opacity-80` : `hover:bg-blue hover:text-white`}
         ${size === ButonSize.Stretched ? "w-full" : "w-fit"}
       `}
     >

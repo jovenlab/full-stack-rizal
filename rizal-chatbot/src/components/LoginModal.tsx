@@ -66,9 +66,9 @@ export default function LoginModal({ onSignUp, onLogin }: any) {
           type="password"
           onChange={(e) => setForm({ ...form, password: e })}
         />
-
-        <ActionButton label="Login" onClick={login} />
       </form>
+
+      <ActionButton label="Login" onClick={login} />
 
       <br />
 

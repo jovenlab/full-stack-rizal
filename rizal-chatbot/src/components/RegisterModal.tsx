@@ -160,10 +160,9 @@ export default function RegisterModal({ onSignIn, onSuccess }: any) {
           onChange={(e) => setForm({ ...form, confirmPassword: e })}
           error={errors.confirmPassword}
         />
-
-        <ActionButton label="Register" onClick={register} />
       </form>
 
+      <ActionButton label="Register" onClick={register} />
       <br />
 
       <div
