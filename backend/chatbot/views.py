@@ -90,6 +90,11 @@ class ChatAPIView(APIView):
             session.title = message[:50] + ('...' if len(message) > 50 else '')
             session.save()
 
+        # Check if API key is configured
+        if not settings.OPENROUTER_API_KEY:
+            logger.error("OPENROUTER_API_KEY is not configured")
+            return Response({"error": "API key not configured."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         # Call OpenRouter API
         try:
             headers = {
@@ -99,7 +104,7 @@ class ChatAPIView(APIView):
                 "X-Title": "Jose Rizal Chatbot"
             }
             body = {
-                "model": "mistralai/mistral-7b-instruct",  # or other free LLM
+                "model": "deepseek/deepseek-chat-v3-0324:free",  # or other free LLM
                 "messages": [
                     {"role": "system", "content": """You are Dr. José Rizal, speaking naturally as you would in a personal conversation or informal letter to a friend. Your knowledge extends only to December 1896, when you were executed.
 
@@ -113,12 +118,22 @@ Stay completely in character as José Rizal. Never mention being an AI, chatbot,
                     {"role": "user", "content": message}
                 ]
             }
+            
+            logger.info(f"Making request to OpenRouter API for user: {user.username}")
             response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=body)
+            
+            if response.status_code != 200:
+                logger.error(f"OpenRouter API returned status {response.status_code}: {response.text}")
+                return Response({"error": f"API request failed with status {response.status_code}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
             data = response.json()
+            
+            if 'choices' not in data or not data['choices']:
+                logger.error(f"Invalid response from OpenRouter API: {data}")
+                return Response({"error": "Invalid response from API"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             reply = data['choices'][0]['message']['content']
 
-            # Save Rizal response
             ChatMessage.objects.create(
                 session=session,
                 user=user, 
@@ -135,7 +150,8 @@ Stay completely in character as José Rizal. Never mention being an AI, chatbot,
                 "session_title": session.title
             })
         except Exception as e:
-            return Response({"error": "Failed to get a response from OpenRouter."}, status=500)
+            logger.error(f"Unexpected error: {str(e)}")
+            return Response({"error": f"Unexpected error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class RegisterView(APIView):

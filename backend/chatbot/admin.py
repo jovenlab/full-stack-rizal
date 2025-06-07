@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import ChatMessage, ChatSession
 
 @admin.register(ChatSession)
@@ -22,3 +23,4 @@ class ChatMessageAdmin(admin.ModelAdmin):
     def message_preview(self, obj):
         return obj.message[:50] + ('...' if len(obj.message) > 50 else '')
     message_preview.short_description = 'Message Preview'
+
