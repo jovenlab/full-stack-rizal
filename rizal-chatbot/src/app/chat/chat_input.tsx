@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { Send, X } from "lucide-react";
 
 interface TextFieldProps {
   placeholder: string;
@@ -8,6 +8,8 @@ interface TextFieldProps {
   onClick: () => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   disabled: boolean;
+  isEditing?: boolean;
+  onCancel?: () => void;
 }
 export default function ChatInput({
   placeholder,
@@ -17,6 +19,8 @@ export default function ChatInput({
   onClick,
   onKeyDown,
   disabled,
+  isEditing = false,
+  onCancel,
 }: TextFieldProps) {
   return (
     <div
@@ -42,15 +46,31 @@ export default function ChatInput({
         `}
       />
 
-      <button
-        disabled={disabled}
-        onClick={onClick}
-        className="
-          cursor-pointer
-        "
-      >
-        <Send size={20} color="var(--color-brown)" />
-      </button>
+      <div className="flex gap-2">
+        {isEditing && onCancel && (
+          <button
+            onClick={onCancel}
+            className="
+              cursor-pointer
+              p-1
+            "
+            title="Cancel edit"
+          >
+            <X size={20} color="var(--color-brown)" />
+          </button>
+        )}
+        
+        <button
+          disabled={disabled}
+          onClick={onClick}
+          className="
+            cursor-pointer
+          "
+          title={isEditing ? "Save changes" : "Send message"}
+        >
+          <Send size={20} color="var(--color-brown)" />
+        </button>
+      </div>
     </div>
   );
 }
