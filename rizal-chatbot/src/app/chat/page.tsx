@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
+import TypingSpinner from '@/src/components/TypingSpinner';
+
 function typeBotReply(fullText: string, onUpdate: (typedText: string) => void, onComplete: () => void) {
   let index = 0;
   const interval = setInterval(() => {
@@ -28,9 +30,13 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const router = useRouter();
 
-  const [displayedMessages, setDisplayedMessages] = useState<ChatMessage[]>([]);
+  // const [displayedMessages, setDisplayedMessages] = useState<ChatMessage[]>([]);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+
+  const [isTyping, setIsTyping] = useState(false);
+
+  const [isFetching, setIsFetching] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   // Scroll to bottom on messages update
@@ -55,6 +61,7 @@ export default function ChatPage() {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
+
     const userMessage: ChatMessage = {
       sender: 'user',
       message: input,
@@ -62,6 +69,7 @@ export default function ChatPage() {
     };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
+    setIsFetching(true); // ⏳ Start loading
 
     try {
       const res = await axios.post(
@@ -76,7 +84,8 @@ export default function ChatPage() {
 
       // Start typing animation for bot reply
       const fullReply = res.data.response;
-
+      setIsFetching(false); // Stop loading when reply is received
+      setIsTyping(true);
       const emptyBotMessage: ChatMessage = {
         sender: 'rizal',
         message: '',
@@ -89,15 +98,20 @@ export default function ChatPage() {
         (typed) => {
           setMessages((prev) => {
             const updated = [...prev];
-            updated[updated.length - 1] = { ...updated[updated.length - 1], message: typed };
+            updated[updated.length - 1] = {
+              ...updated[updated.length - 1],
+              message: typed,
+            };
             return updated;
           });
         },
         () => {
-          // Typing finished
+          setIsTyping(false); // Typing done
         }
       );
+      
     } catch (err) {
+      setIsFetching(false);
       console.error('Failed to send message:', err);
     }
   };
@@ -108,10 +122,20 @@ export default function ChatPage() {
     router.push('/');
   };
 
+
+  const TypingDots = () => (
+    <div className="flex items-center space-x-1">
+      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0s]"></div>
+      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+      <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+    </div>
+  );
+
+
   useEffect(() => {
     if (!token) router.push('/');
     else fetchHistory();
-  }, []);
+  }, [token]);
 
   return (
     <div className="flex h-screen">
@@ -150,6 +174,19 @@ export default function ChatPage() {
               <p>{msg.message}</p>
             </div>
           ))}
+
+            {isFetching && (
+              <div className="self-start">
+                <TypingSpinner />
+              </div>
+            )}
+
+            {isTyping && (
+              <div className="p-3 rounded-lg w-fit max-w-xl bg-gray-200 text-black self-start">
+                <TypingDots />
+              </div>
+            )}
+
 
           {/* This empty div is used to scroll into view */}
           <div ref={bottomRef} />
