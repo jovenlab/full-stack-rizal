@@ -43,7 +43,7 @@ export const setupAxiosInterceptors = (router: any) => {
         try {
           const refreshToken = localStorage.getItem('refresh_token');
           if (refreshToken) {
-            const response = await axios.post('http://localhost:8000/api/token/refresh/', {
+            const response = await axios.post('https://full-stack-rizal-deployment.onrender.com/api/token/refresh/', {
               refresh: refreshToken
             });
             
