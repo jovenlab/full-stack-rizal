@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_CONFIG } from './config';
 
 const API = axios.create({
-  baseURL: 'https://full-stack-rizal-deployment.onrender.com/api/',
+  baseURL: API_CONFIG.BASE_URL + '/',
 });
 
 // Add Authorization header automatically

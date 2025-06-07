@@ -6,6 +6,7 @@ import axios from 'axios';
 
 import TypingSpinner from '@/src/components/TypingSpinner';
 import { setupAxiosInterceptors, getAuthHeaders, clearTokens } from '@/lib/axios';
+import { API_CONFIG } from '@/lib/config';
 
 function typeBotReply(fullText: string, onUpdate: (typedText: string) => void, onComplete: () => void) {
   let index = 0;
@@ -60,7 +61,7 @@ export default function ChatPage() {
 
   const fetchSessions = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/api/sessions/', {
+      const res = await axios.get(API_CONFIG.ENDPOINTS.SESSIONS, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSessions(res.data);
@@ -72,7 +73,7 @@ export default function ChatPage() {
 
   const fetchSessionMessages = async (sessionId: number) => {
     try {
-      const res = await axios.get(`http://localhost:8000/api/sessions/${sessionId}/`, {
+      const res = await axios.get(API_CONFIG.ENDPOINTS.SESSION_DETAIL(sessionId), {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -138,7 +139,7 @@ export default function ChatPage() {
       }
 
       const res = await axios.post(
-        'http://localhost:8000/api/chat/',
+        API_CONFIG.ENDPOINTS.CHAT,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -221,7 +222,7 @@ export default function ChatPage() {
     if (!confirm('Are you sure you want to delete this chat session?')) return;
 
     try {
-      await axios.delete(`http://localhost:8000/api/sessions/${sessionId}/`, {
+      await axios.delete(API_CONFIG.ENDPOINTS.SESSION_DETAIL(sessionId), {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSessions(prev => prev.filter(s => s.id !== sessionId));
