@@ -63,6 +63,8 @@ export default function ChatPage() {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredSessions, setFilteredSessions] = useState<ChatSession[]>([]);
   const [currentTypingCleanup, setCurrentTypingCleanup] = useState<
     (() => void) | null
   >(null);
@@ -335,6 +337,24 @@ export default function ChatPage() {
     }
   }, [token]);
 
+  // Add search functionality
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredSessions(sessions);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = sessions.filter((session) => {
+      const titleMatch = session.title?.toLowerCase().includes(query);
+      const lastMessageMatch = session.last_message?.message
+        .toLowerCase()
+        .includes(query);
+      return titleMatch || lastMessageMatch;
+    });
+    setFilteredSessions(filtered);
+  }, [searchQuery, sessions]);
+
   return (
     <div
       className="
@@ -362,7 +382,7 @@ export default function ChatPage() {
             transition-all
             duration-300 ease-in-out fixed
             sm:relative
-            ${isSidebarOpen ? "w-[280px] sm:w-1/5" : "w-0"}
+            ${isSidebarOpen ? "w-[280px] sm:w-1/4" : "w-0"}
             ${isSidebarOpen ? "p-4" : "p-0"}
           `}
         >
@@ -382,17 +402,33 @@ export default function ChatPage() {
             >
               Chat Sessions
             </h2>
-            {/* <button
-              onClick={startNewSession}
+          </div>
+
+          {/* Add search input */}
+          <div
+            className={`
+              mb-4
+              transition-opacity
+              duration-300
+              ${isSidebarOpen ? "opacity-100" : "opacity-0"}
+              ${!isSidebarOpen && "hidden"}
+            `}
+          >
+            <input
+              type="text"
+              placeholder="Search sessions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="
-                px-3 py-1
-                text-white text-sm
-                bg-blue-600
-                rounded hover:bg-blue-700
+                w-full
+                p-2
+                text-brown font-pica
+                bg-white
+                border border-peach rounded-lg
+                transition-all
+                focus:outline-none focus:ring-2 focus:ring-red placeholder:text-brown placeholder:opacity-60
               "
-            >
-              New Chat
-            </button> */}
+            />
           </div>
 
           <div
@@ -432,7 +468,7 @@ export default function ChatPage() {
             )}
 
             {/* Existing sessions */}
-            {sessions.map((session) => (
+            {filteredSessions.map((session) => (
               <div
                 key={session.id}
                 onClick={() => selectSession(session)}
@@ -482,8 +518,9 @@ export default function ChatPage() {
                     className="
                       ml-2 p-1
                       text-red
-                      opacity-0 cursor-pointer
+                      opacity-100 cursor-pointer
                       group-hover:opacity-100 hover:text-red-700 rounded
+                      sm:opacity-0
                     "
                   >
                     <X
