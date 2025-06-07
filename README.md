@@ -59,8 +59,8 @@ It uses AI to simulate Rizal's personality, knowledge, and wit, providing a uniq
 ### Built With
 
 * [![Django][Django]][Django-url]
+* [![React][React.js]][React-url]
 * [![SQLite][SQLite]][SQLite-url]
-* [![CSS3][CSS3]][CSS3-url]
 * [![TailwindCSS][TailwindCSS]][TailwindCSS-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -158,14 +158,10 @@ Thanks to these amazing people for bringing **RizalGPT** to life!
 <!-- MARKDOWN LINKS & IMAGES -->
 [Django]: https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white
 [Django-url]: https://www.djangoproject.com/
-[CSS3]: https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white
-[CSS3-url]: https://developer.mozilla.org/en-US/docs/Web/CSS
 [SQLite]: https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white
 [SQLite-url]: https://www.sqlite.org/
 [React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
 [React-url]: https://reactjs.org/
-[Next.js]: https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white
-[Nextjs-url]: https://nextjs.org/
 [TailwindCSS]: https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white
 [TailwindCSS-url]: https://tailwindcss.com/
 
