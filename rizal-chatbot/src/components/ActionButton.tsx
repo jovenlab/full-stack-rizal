@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { ReactNode } from "react";
 
 export enum ButtonVariant {
   Filled,
@@ -11,7 +12,7 @@ export enum ButonSize {
 }
 
 interface ActionButtonProps {
-  label: string;
+  label: ReactNode;
   variant?: ButtonVariant;
   size?: ButonSize;
   color?: string;
@@ -32,7 +33,6 @@ export default function ActionButton({
       onClick={onClick}
       style={{
         borderColor: `var(--color-${color})`,
-        backgroundColor: `var(--color-${color})`,
       }}
       className={`
         flex
@@ -43,7 +43,7 @@ export default function ActionButton({
         hover:cursor-pointer items-center justify-center gap-2
         ${variant === ButtonVariant.Outlined ? `text-${color}` : `text-white`}
         ${variant === ButtonVariant.Filled ? `bg-${color}` : `bg-transparent`}
-        ${variant === ButtonVariant.Filled ? `hover:opacity-80` : `hover:bg-blue hover:text-white`}
+        ${variant === ButtonVariant.Filled ? `hover:opacity-80` : `hover:bg-${color} hover:text-white`}
         ${size === ButonSize.Stretched ? "w-full" : "w-fit"}
       `}
     >

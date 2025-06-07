@@ -6,6 +6,8 @@ interface TextFieldProps {
   type?: string;
   onChange: (value: string) => void;
   onClick: () => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  disabled: boolean;
 }
 export default function ChatInput({
   placeholder,
@@ -13,6 +15,8 @@ export default function ChatInput({
   type = "text",
   onChange,
   onClick,
+  onKeyDown,
+  disabled,
 }: TextFieldProps) {
   return (
     <div
@@ -29,15 +33,17 @@ export default function ChatInput({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
         className={`
           w-full
-          text-lg font-pica
+          text-lg font-pica text-brown
           transition-all
-          placeholder:text-gray-400 focus:outline-none focus:ring-0
+          placeholder:text-brown placeholder:opacity-60 focus:outline-none focus:ring-0
         `}
       />
 
       <button
+        disabled={disabled}
         onClick={onClick}
         className="
           cursor-pointer

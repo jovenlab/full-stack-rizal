@@ -2,13 +2,17 @@ import ActionButton, {
   ButonSize,
   ButtonVariant,
 } from "@/src/components/ActionButton";
-import { Edit } from "lucide-react";
+import { Edit, Sidebar } from "lucide-react";
 
 interface ChatHeaderProps {
   onNewChat: () => void;
+  toggleSidebar: () => void;
 }
 
-export default function ChatHeader({ onNewChat }: ChatHeaderProps) {
+export default function ChatHeader({
+  onNewChat,
+  toggleSidebar,
+}: ChatHeaderProps) {
   return (
     <div
       className="
@@ -19,23 +23,47 @@ export default function ChatHeader({ onNewChat }: ChatHeaderProps) {
         items-center justify-between
       "
     >
-      <h1
+      <div
         className="
-          text-blue text-3xl font-maragsa
+          flex flex-row
+          justify-center items-center gap-2
         "
       >
-        Rizal
-        <span
+        <button onClick={toggleSidebar}>
+          <Sidebar
+            className="
+              text-brown
+              cursor-pointer
+            "
+          />
+        </button>
+        <h1
           className="
-            text-red
+            text-blue text-3xl font-maragsa
           "
         >
-          GPT
-        </span>
-      </h1>
+          Rizal
+          <span
+            className="
+              text-red
+            "
+          >
+            GPT
+          </span>
+        </h1>
+      </div>
       <ActionButton
         color="brown"
-        label="New Conversation"
+        label={
+          <span
+            className="
+              hidden
+              sm:inline
+            "
+          >
+            New Conversation
+          </span>
+        }
         size={ButonSize.Compact}
         variant={ButtonVariant.Filled}
         onClick={onNewChat}
