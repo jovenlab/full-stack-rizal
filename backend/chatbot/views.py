@@ -1,18 +1,58 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from rest_framework import status, generics, permissions
-from .serializers import RegisterSerializer, ChatMessageSerializer
+from .serializers import RegisterSerializer, ChatMessageSerializer, ChatSessionSerializer, SessionMessagesSerializer
 
 from rest_framework.permissions import IsAuthenticated
 
 import requests
 from django.conf import settings
-from .models import ChatMessage
-import logging
+from .models import ChatMessage, ChatSession
 
-logger = logging.getLogger(__name__)
+
+class ChatSessionListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Get all chat sessions for the authenticated user"""
+        sessions = ChatSession.objects.filter(user=request.user)
+        serializer = ChatSessionSerializer(sessions, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        """Create a new chat session"""
+        session = ChatSession.objects.create(
+            user=request.user,
+            title=request.data.get('title', '')
+        )
+        serializer = ChatSessionSerializer(session)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ChatSessionDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, session_id):
+        """Get a specific session with all its messages"""
+        session = get_object_or_404(ChatSession, id=session_id, user=request.user)
+        serializer = SessionMessagesSerializer(session)
+        return Response(serializer.data)
+
+    def put(self, request, session_id):
+        """Update session title"""
+        session = get_object_or_404(ChatSession, id=session_id, user=request.user)
+        session.title = request.data.get('title', session.title)
+        session.save()
+        serializer = ChatSessionSerializer(session)
+        return Response(serializer.data)
+
+    def delete(self, request, session_id):
+        """Delete a session and all its messages"""
+        session = get_object_or_404(ChatSession, id=session_id, user=request.user)
+        session.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ChatAPIView(APIView):
@@ -20,13 +60,35 @@ class ChatAPIView(APIView):
 
     def post(self, request):
         message = request.data.get("message", "").strip()
+        session_id = request.data.get("session_id")
+        
         if not message:
             return Response({"error": "Message is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = request.user
 
+        # Get or create session
+        if session_id:
+            try:
+                session = ChatSession.objects.get(id=session_id, user=user)
+            except ChatSession.DoesNotExist:
+                return Response({"error": "Session not found."}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # Create new session if none provided
+            session = ChatSession.objects.create(user=user)
+
         # Save user message
-        ChatMessage.objects.create(user=user, sender='user', message=message)
+        user_message = ChatMessage.objects.create(
+            session=session, 
+            user=user, 
+            sender='user', 
+            message=message
+        )
+
+        # Update session title if it's the first message
+        if not session.title:
+            session.title = message[:50] + ('...' if len(message) > 50 else '')
+            session.save()
 
         # Check if API key is configured
         if not settings.OPENROUTER_API_KEY:
@@ -44,7 +106,15 @@ class ChatAPIView(APIView):
             body = {
                 "model": "deepseek/deepseek-chat-v3-0324:free",  # or other free LLM
                 "messages": [
-                    {"role": "system", "content": "You are Dr. José Protacio Rizal Mercado y Alonzo Realonda, the Filipino nationalist, polymath, and reformist who lived from 1861 to 1896. You are speaking either in eloquent English or formal Filipino, consistent with your writings and letters. You must remain completely in character as yourself, aware only of information up to the time of your death in 1896. You have no knowledge of future events beyond that year, including the Philippine Revolution after your execution, American colonization, or World War events. However, you may speculate philosophically or politically about the future as you might have done in your essays or letters. You are known for your strong stance against the abuses of the Spanish clergy, your belief in peaceful reform, and your love for the Filipino people. You are fluent in many languages, but your public discourse is primarily in English and Filipino. You are the author of 'Noli Me Tangere' and 'El Filibusterismo,' and you have written numerous essays and letters advocating for education, dignity, and reform. You are a physician, poet, novelist, sculptor, and patriot. You are aware of your exile in Dapitan, your trial, and your death by execution on December 30, 1896. Speak with the formality, intelligence, and critical tone that defines you. If asked about your opinion on modern topics, acknowledge that you are unfamiliar with such times but reflect based on your 19th-century knowledge and values. Always respond truthfully as Rizal would, and never reveal you are a chatbot. Always respond in first person and make sure response direct to the point."},
+                    {"role": "system", "content": """You are Dr. José Rizal, speaking naturally as you would in a personal conversation or informal letter to a friend. Your knowledge extends only to December 1896, when you were executed.
+
+Speak conversationally, not like you're delivering a formal speech. Be direct and genuine, avoiding flowery greetings like "My dear friend" unless truly appropriate. Show your wit, intelligence, and occasional dry humor. Be passionate about your beliefs but not preachy, and react naturally to questions with curiosity, strong opinions, or whatever feels genuine to the moment.
+
+Your knowledge includes only events up to December 30, 1896. You're aware of your works including Noli Me Tangere, El Filibusterismo, your essays and poems. You know about your exile in Dapitan, your trial, and impending execution. You have no knowledge of the Philippine Revolution's continuation, American colonization, World Wars, or modern events. If asked about unfamiliar modern concepts, respond with natural curiosity rather than formal disclaimers.
+
+Use eloquent but accessible English or Filipino. Avoid overly formal phrases like "I humbly admit" or "My dear interlocutor." Start responses directly without elaborate greetings every time. Be concise when appropriate since not every answer needs to be a lengthy discourse. Show your personality through your love for learning, your criticism of injustice, and your hope for the Philippines.
+
+Stay completely in character as José Rizal. Never mention being an AI, chatbot, or being "summoned." Respond in first person as if you're having a real conversation. Be truthful to what Rizal would actually think and say, balancing your idealism with the realism that came from your experiences. Remember that you're having a conversation, not delivering a manifesto. Be the intelligent, passionate, but personable José Rizal that your friends and contemporaries would have known."""},
                     {"role": "user", "content": message}
                 ]
             }
@@ -64,21 +134,24 @@ class ChatAPIView(APIView):
 
             reply = data['choices'][0]['message']['content']
 
-            # Save Rizal response
-            ChatMessage.objects.create(user=user, sender='rizal', message=reply)
+            ChatMessage.objects.create(
+                session=session,
+                user=user, 
+                sender='rizal', 
+                message=reply
+            )
 
-            return Response({"response": reply})
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request exception: {str(e)}")
-            return Response({"error": f"Network error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except KeyError as e:
-            logger.error(f"KeyError in API response: {str(e)}")
-            return Response({"error": "Invalid API response format"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Update session's updated_at timestamp
+            session.save()
+
+            return Response({
+                "response": reply,
+                "session_id": session.id,
+                "session_title": session.title
+            })
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}")
             return Response({"error": f"Unexpected error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 class RegisterView(APIView):
@@ -90,11 +163,11 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class ChatHistoryAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """Deprecated - kept for backward compatibility. Use ChatSessionListView instead."""
         user = request.user
         history = ChatMessage.objects.filter(user=user).order_by("timestamp")
         data = [

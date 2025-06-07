@@ -10,8 +10,9 @@ export default function LoginModal({ onSignUp, onLogin }: any) {
 
   const login = async () => {
     try {
-      const res = await API.post("token/", form);
-      localStorage.setItem("access_token", res.data.access);
+      const res = await API.post('token/', form);
+      localStorage.setItem('access_token', res.data.access);
+      localStorage.setItem('refresh_token', res.data.refresh);
       onLogin(); // proceed to chat page or dashboard
     } catch (err: any) {
       setError("Invalid credentials");
