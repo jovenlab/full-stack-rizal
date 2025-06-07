@@ -350,13 +350,27 @@ export default function ChatPage() {
             messages.map((msg, index) => (
               <div
                 key={index}
-                className={`p-3 rounded-lg w-fit max-w-xl ${
-                  msg.sender === 'user'
-                    ? 'bg-blue-500 text-white self-end ml-auto'
-                    : 'bg-gray-200 text-black self-start'
+                className={`flex items-start gap-2 ${
+                  msg.sender === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
-                <p>{msg.message}</p>
+                {msg.sender === 'rizal' && (
+                  <img
+                    src="/avatars/jriz.jpg"
+                    alt="Rizal Avatar"
+                    className="m-1 w-8 h-8 rounded-full ring-2 ring-green-400 shadow-md"
+                  />
+                )}
+                <div
+                  className={`p-3 rounded-lg max-w-xl ${
+                    msg.sender === 'user'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-black'
+                  }`}
+                >
+                  <p>{msg.message}</p>
+                </div>
+
               </div>
             ))
           )}
