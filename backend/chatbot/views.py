@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
+import logging
 
 from rest_framework import status, generics, permissions
 from .serializers import RegisterSerializer, ChatMessageSerializer, ChatSessionSerializer, SessionMessagesSerializer
@@ -10,6 +11,8 @@ from rest_framework.permissions import IsAuthenticated
 import requests
 from django.conf import settings
 from .models import ChatMessage, ChatSession
+
+logger = logging.getLogger(__name__)
 
 
 class ChatSessionListView(APIView):
