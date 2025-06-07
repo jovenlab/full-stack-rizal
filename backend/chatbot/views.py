@@ -8,8 +8,11 @@ from .serializers import RegisterSerializer, ChatMessageSerializer, ChatSessionS
 from rest_framework.permissions import IsAuthenticated
 
 import requests
+import logging
 from django.conf import settings
 from .models import ChatMessage, ChatSession
+
+logger = logging.getLogger(__name__)
 
 
 class ChatSessionListView(APIView):
