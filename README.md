@@ -134,7 +134,7 @@ To use RizalGPT, you need an API key from OpenRouter for LLM access.
    ```
 4. Restart your backend server after updating the `.env` file.
 
-> For more details, see the [OpenRouter documentation]((https://openrouter.ai/docs/quickstart)).
+> For more details, see the [OpenRouter documentation](https://openrouter.ai/docs/quickstart).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
