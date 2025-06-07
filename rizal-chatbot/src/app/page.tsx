@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import RegisterModal from "@/src/components/RegisterModal";
-import LoginModal from "@/src/components/LoginModal";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import RegisterModal from '@/src/components/RegisterModal';
+import LoginModal from '@/src/components/LoginModal';
+import { clearTokens } from '@/lib/axios';
 
 // Initial commit are:
 // 1. Authentication(Django REST Framework + JWT)
@@ -26,6 +27,7 @@ export default function Home() {
 
   const logout = () => {
     localStorage.removeItem("access_token");
+    clearTokens();
     setIsLoggedIn(false);
     router.push("/");
   };

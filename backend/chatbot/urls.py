@@ -1,5 +1,11 @@
 from django.urls import path
-from .views import ChatAPIView, RegisterView, ChatHistoryAPIView
+from .views import (
+    ChatAPIView, 
+    RegisterView, 
+    ChatHistoryAPIView, 
+    ChatSessionListView, 
+    ChatSessionDetailView
+)
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -7,5 +13,9 @@ urlpatterns = [
     path('register/', RegisterView.as_view()),
     path('token/', TokenObtainPairView.as_view()),        # login
     path('token/refresh/', TokenRefreshView.as_view()),   # refresh
-    path('chat/history/', ChatHistoryAPIView.as_view(), name='chat-history'),
+    path('chat/history/', ChatHistoryAPIView.as_view(), name='chat-history'),  # deprecated
+    
+    # New session-based endpoints
+    path('sessions/', ChatSessionListView.as_view(), name='chat-sessions'),
+    path('sessions/<int:session_id>/', ChatSessionDetailView.as_view(), name='chat-session-detail'),
 ]
