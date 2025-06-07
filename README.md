@@ -1,4 +1,4 @@
-<a name="readme-top"></a>
+![image](https://github.com/user-attachments/assets/863f6d84-01c1-46ed-93f0-f3855f6c58f4)<a name="readme-top"></a>
 
 <br />
 
@@ -51,7 +51,20 @@ It uses AI to simulate Rizal's personality, knowledge, and wit, providing a uniq
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
+## User Interface
 
+### Signin Page
+<img src="readmeassets/signin.png" alt="Login Screenshot" width="400"/>
+
+### SignUp Page
+<img src="readmeassets/signup.png" alt="Login Screenshot" width="400"/>
+
+### Chat View
+<img src="" alt="Chat View Screenshot" width="400"/>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
 ### Built With
 
 * [![Django][Django]][Django-url]
