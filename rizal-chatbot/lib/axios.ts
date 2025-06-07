@@ -43,7 +43,8 @@ export const setupAxiosInterceptors = (router: any) => {
         try {
           const refreshToken = localStorage.getItem('refresh_token');
           if (refreshToken) {
-            const response = await axios.post('http://localhost:8000/api/token/refresh/', {
+            const { API_CONFIG } = await import('./config');
+            const response = await axios.post(API_CONFIG.ENDPOINTS.REFRESH, {
               refresh: refreshToken
             });
             

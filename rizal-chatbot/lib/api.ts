@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_CONFIG } from './config';
 
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api/',
+  baseURL: API_CONFIG.BASE_URL + '/',
 });
 
 // Add Authorization header automatically

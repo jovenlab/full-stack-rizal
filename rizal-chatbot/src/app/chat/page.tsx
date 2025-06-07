@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import Modal from "react-modal";
 
+
 import TypingSpinner from "@/src/components/TypingSpinner";
 import {
   setupAxiosInterceptors,
@@ -15,6 +16,8 @@ import ChatInput from "./chat_input";
 import ChatHeader from "./chat_header";
 import ActionButton from "@/src/components/ActionButton";
 import { X, Edit2 } from "lucide-react";
+import { API_CONFIG } from '@/lib/config';
+
 
 // Function to format text with markdown and line breaks
 const formatBotMessage = (text: string) => {
@@ -153,7 +156,9 @@ export default function ChatPage() {
 
   const fetchSessions = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/sessions/", {
+
+      const res = await axios.get(API_CONFIG.ENDPOINTS.SESSIONS, {
+
         headers: { Authorization: `Bearer ${token}` },
       });
       setSessions(res.data);
@@ -165,13 +170,10 @@ export default function ChatPage() {
 
   const fetchSessionMessages = async (sessionId: number) => {
     try {
-      const res = await axios.get(
-        `http://localhost:8000/api/sessions/${sessionId}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
+      const res = await axios.get(API_CONFIG.ENDPOINTS.SESSION_DETAIL(sessionId), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
       // Only update if this is still the current session (prevent race conditions)
       setCurrentSession((prevSession) => {
         if (prevSession?.id === sessionId) {
@@ -262,9 +264,15 @@ export default function ChatPage() {
         payload.session_id = currentSession.id;
       }
 
-      const res = await axios.post("http://localhost:8000/api/chat/", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+
+      const res = await axios.post(
+        API_CONFIG.ENDPOINTS.CHAT,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
 
       // If we didn't have a current session, this is a new one
       if (!currentSession) {
@@ -375,15 +383,14 @@ export default function ChatPage() {
     if (!sessionToDelete) return;
 
     try {
-      await axios.delete(
-        `http://localhost:8000/api/sessions/${sessionToDelete}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      setSessions((prev) => prev.filter((s) => s.id !== sessionToDelete));
 
-      if (currentSession?.id === sessionToDelete) {
+      await axios.delete(API_CONFIG.ENDPOINTS.SESSION_DETAIL(sessionId), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      
+      if (currentSession?.id === sessionId) {
+
         startNewSession();
       }
     } catch (err) {
