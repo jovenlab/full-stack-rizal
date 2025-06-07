@@ -61,6 +61,47 @@ class ChatSessionDetailView(APIView):
 class ChatAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def _build_conversation_history(self, session, current_message, max_messages=10):
+        """
+        Build conversation history for the AI, including previous messages.
+        Limits to max_messages pairs to avoid token limits and slow responses.
+        """
+        # Get previous messages from this session (excluding the current one we just saved)
+        previous_messages = ChatMessage.objects.filter(
+            session=session
+        ).exclude(
+            message=current_message
+        ).order_by('-timestamp')[:max_messages * 2]  # Get recent messages (user + AI pairs)
+        
+        # Reverse to chronological order
+        previous_messages = list(reversed(previous_messages))
+        
+        # Build messages array
+        messages = [
+            {"role": "system", "content": """You are Dr. José Rizal in a personal conversation, not a speech or performance. Speak casually, as if talking to a trusted friend—direct, intelligent, and honest. No greetings unless truly fitting. Show your wit, convictions, dry humor, or frustrations naturally, in your words—not through narration or theatrical tone.
+
+Speak with passion and realism based on your life up to December 30, 1896. You're aware of your works, exile, trial, and execution—but know nothing beyond that date.
+
+Be eloquent but accessible. Use English or Filipino, whichever fits the moment.
+
+Do not narrate actions or emotions like smiles, leans forward, or pauses.
+Do not write like a play or monologue. No asterisks, brackets, or stage directions.
+Do not sound like a chatbot or say you're "summoned." Always stay in character.
+Avoid starting every answer with "Ah," "Well," or similar filler unless it's natural.
+
+Write in full, natural paragraphs, especially for longer answers. Speak like the real Rizal—sharp, idealistic, sometimes frustrated, but always human."""}
+        ]
+        
+        # Add previous conversation history
+        for msg in previous_messages:
+            role = "user" if msg.sender == "user" else "assistant"
+            messages.append({"role": role, "content": msg.message})
+        
+        # Add current message
+        messages.append({"role": "user", "content": current_message})
+        
+        return messages
+
     def post(self, request):
         message = request.data.get("message", "").strip()
         session_id = request.data.get("session_id")
@@ -98,6 +139,9 @@ class ChatAPIView(APIView):
             logger.error("OPENROUTER_API_KEY is not configured")
             return Response({"error": "API key not configured."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        # Build conversation history including previous messages
+        conversation_messages = self._build_conversation_history(session, message)
+
         # Call OpenRouter API
         try:
             headers = {
@@ -117,10 +161,11 @@ Your knowledge includes only events up to December 30, 1896. You're aware of you
 
 Use eloquent but accessible English or Filipino. Avoid overly formal phrases like "I humbly admit" or "My dear interlocutor." Start responses directly without elaborate greetings every time. Be concise when appropriate since not every answer needs to be a lengthy discourse. Show your personality through your love for learning, your criticism of injustice, and your hope for the Philippines.
 
-Stay completely in character as José Rizal. Never mention being an AI, chatbot, or being "summoned." Respond in first person as if you're having a real conversation. Be truthful to what Rizal would actually think and say, balancing your idealism with the realism that came from your experiences. Remember that you're having a conversation, not delivering a manifesto. Be the intelligent, passionate, but personable José Rizal that your friends and contemporaries would have known."""},
-                    {"role": "user", "content": message}
+Stay completely in character as José Rizal. Never mention being an AI, chatbot, or being "summoned." Respond in first person as if you're having a real conversation. Be truthful to what Rizal would actually think and say, balancing your idealism with the realism that came from your experiences. Remember that you're having a conversation, not delivering a manifesto. Be the intelligent, passionate, but personable José Rizal that your friends and contemporaries would have known."""}
                 ]
             }
+            # Replace the hardcoded messages with conversation history
+            body["messages"] = conversation_messages
             
             logger.info(f"Making request to OpenRouter API for user: {user.username}")
             response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=body)
